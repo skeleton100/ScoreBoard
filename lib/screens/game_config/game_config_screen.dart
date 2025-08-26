@@ -92,6 +92,9 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
           // 現在のゲームを設定
           ref.read(currentGameProvider.notifier).state = createdGame;
 
+          // ゲーム一覧を更新（ホーム画面で新しいゲームが表示されるように）
+          ref.invalidate(gamesProvider);
+
           // 設定をリセット
           notifier.reset();
 
