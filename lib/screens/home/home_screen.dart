@@ -238,7 +238,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   Expanded(
                     child: Text(
-                      'ウマ: ${game.umaOka.toInt()}点',
+                      'ウマ: ${game.uma.toInt()}点 / オカ: ${game.oka.toInt()}点',
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                       ),

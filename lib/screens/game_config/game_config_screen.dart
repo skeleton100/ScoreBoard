@@ -69,7 +69,8 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
           final game = Game(
             title: gameConfig.title,
             basePoint: gameConfig.basePoint,
-            umaOka: gameConfig.umaOka,
+            uma: gameConfig.uma,
+            oka: gameConfig.oka,
             memo: gameConfig.memo,
           );
 
@@ -149,6 +150,10 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
         title: const Text('麻雀記録表作成'),
         backgroundColor: AppColors.gameConfigAppBar,
         foregroundColor: AppColors.textLight,
+        leading: IconButton(
+          onPressed: () => context.go(RouteNames.home),
+          icon: const Icon(Icons.arrow_back),
+        ),
         actions: [
           TextButton(
             onPressed: _isCreating ? null : _createGameConfig,
@@ -306,7 +311,7 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              'ウマ: ${gameConfig.umaOka.toInt()}点',
+                              'ウマ: ${gameConfig.uma.toInt()}点',
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: AppColors.textSecondary,
@@ -316,13 +321,13 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
                           Expanded(
                             flex: 2,
                             child: Slider(
-                              value: gameConfig.umaOka,
+                              value: gameConfig.uma,
                               min: 5.0,
                               max: 20.0,
                               divisions: 15,
                               activeColor: AppColors.secondary,
                               onChanged: (value) {
-                                ref.read(gameConfigProvider.notifier).updateUmaOka(value);
+                                ref.read(gameConfigProvider.notifier).updateUma(value);
                               },
                             ),
                           ),

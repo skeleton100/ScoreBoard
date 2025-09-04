@@ -4,7 +4,7 @@ import 'table_definitions.dart';
 
 class DatabaseHelper {
   static const String _databaseName = 'mahjong_scoreboard.db';
-  static const int _databaseVersion = 1;
+  static const int _databaseVersion = 2;
   
   static Database? _database;
 
@@ -42,10 +42,28 @@ class DatabaseHelper {
 
   // データベースアップグレード時の処理
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // 将来的なマイグレーション処理をここに追加
     if (oldVersion < 2) {
-      // 例: 新しいカラムの追加
-      // await db.execute('ALTER TABLE games ADD COLUMN new_column TEXT');
+      // uma_okaを分割してumaとokaに変更
+      await db.execute('ALTER TABLE games ADD COLUMN uma REAL NOT NULL DEFAULT 10.0');
+      await db.execute('ALTER TABLE games ADD COLUMN oka REAL NOT NULL DEFAULT 20.0');
+      
+      // 既存のuma_okaの値をumaとokaにコピー
+      await db.execute('''
+        UPDATE games 
+        SET uma = uma_oka, oka = uma_oka 
+        WHERE uma_oka IS NOT NULL
+      ''');
+      
+      // 古いカラムを削除（SQLiteでは直接削除できないため、テーブルを再作成）
+      await db.execute('CREATE TEMPORARY TABLE games_backup AS SELECT * FROM games');
+      await db.execute('DROP TABLE games');
+      await db.execute(TableDefinitions.createGameTable);
+      await db.execute('''
+        INSERT INTO games (id, title, base_point, uma, oka, memo, created_at, updated_at)
+        SELECT id, title, base_point, uma, oka, memo, created_at, updated_at 
+        FROM games_backup
+      ''');
+      await db.execute('DROP TABLE games_backup');
     }
   }
 

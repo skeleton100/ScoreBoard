@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../utils/app_color.dart';
+import '../../routes/route_names.dart';
 
 class SettingScreen extends ConsumerWidget {
   const SettingScreen({super.key});
@@ -12,6 +14,10 @@ class SettingScreen extends ConsumerWidget {
         title: const Text('Settings'),
         backgroundColor: AppColors.settingsAppBar,
         foregroundColor: AppColors.textLight,
+        leading: IconButton(
+          onPressed: () => context.go(RouteNames.home),
+          icon: const Icon(Icons.arrow_back),
+        ),
       ),
       body: Container(
         decoration: const BoxDecoration(

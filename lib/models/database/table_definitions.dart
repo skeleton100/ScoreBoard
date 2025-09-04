@@ -5,7 +5,8 @@ class TableDefinitions {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       base_point INTEGER NOT NULL DEFAULT 25000,
-      uma_oka REAL NOT NULL DEFAULT 10.0,
+      uma REAL NOT NULL DEFAULT 10.0,
+      oka REAL NOT NULL DEFAULT 20.0,
       memo TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL

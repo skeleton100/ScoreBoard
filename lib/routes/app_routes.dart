@@ -4,6 +4,7 @@ import '../screens/home/home_screen.dart';
 import '../screens/board/board_screen.dart';
 import '../screens/game_config/game_config_screen.dart';
 import '../screens/setting/setting_screen.dart';
+import '../screens/score_input/score_input_screen.dart';
 import 'route_names.dart';
 
 final appRouter = Provider<GoRouter>((ref) {
@@ -24,6 +25,10 @@ final appRouter = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.settings,
         builder: (context, state) => const SettingScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.scoreInput,
+        builder: (context, state) => const ScoreInputScreen(),
       ),
     ],
   );

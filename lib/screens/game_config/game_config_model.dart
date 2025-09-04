@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class GameConfigModel {
   final String title;
   final List<String> playerNames;
-  final double umaOka;
+  final double uma;
+  final double oka;
   final int basePoint;
   final String? memo;
   final DateTime createdAt;
@@ -11,7 +12,8 @@ class GameConfigModel {
   GameConfigModel({
     required this.title,
     required this.playerNames,
-    required this.umaOka,
+    required this.uma,
+    required this.oka,
     required this.basePoint,
     this.memo,
     DateTime? createdAt,
@@ -20,7 +22,8 @@ class GameConfigModel {
   GameConfigModel copyWith({
     String? title,
     List<String>? playerNames,
-    double? umaOka,
+    double? uma,
+    double? oka,
     int? basePoint,
     String? memo,
     DateTime? createdAt,
@@ -28,7 +31,8 @@ class GameConfigModel {
     return GameConfigModel(
       title: title ?? this.title,
       playerNames: playerNames ?? this.playerNames,
-      umaOka: umaOka ?? this.umaOka,
+      uma: uma ?? this.uma,
+      oka: oka ?? this.oka,
       basePoint: basePoint ?? this.basePoint,
       memo: memo ?? this.memo,
       createdAt: createdAt ?? this.createdAt,
@@ -39,7 +43,8 @@ class GameConfigModel {
     return {
       'title': title,
       'playerNames': playerNames,
-      'umaOka': umaOka,
+      'uma': uma,
+      'oka': oka,
       'basePoint': basePoint,
       'memo': memo,
       'createdAt': createdAt.toIso8601String(),
@@ -50,7 +55,8 @@ class GameConfigModel {
     return GameConfigModel(
       title: json['title'] as String,
       playerNames: List<String>.from(json['playerNames']),
-      umaOka: json['umaOka'] as double,
+      uma: (json['uma'] as double?) ?? 10.0, // デフォルト値を設定
+      oka: (json['oka'] as double?) ?? 20.0, // デフォルト値を設定
       basePoint: json['basePoint'] as int,
       memo: json['memo'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -63,7 +69,8 @@ class GameConfigModel {
     return other is GameConfigModel &&
         other.title == title &&
         other.playerNames.length == playerNames.length &&
-        other.umaOka == umaOka &&
+        other.uma == uma &&
+        other.oka == oka &&
         other.basePoint == basePoint &&
         other.memo == memo;
   }
@@ -72,14 +79,15 @@ class GameConfigModel {
   int get hashCode {
     return title.hashCode ^
         playerNames.hashCode ^
-        umaOka.hashCode ^
+        uma.hashCode ^
+        oka.hashCode ^
         basePoint.hashCode ^
         memo.hashCode;
   }
 
   @override
   String toString() {
-    return 'GameConfigModel(title: $title, playerNames: $playerNames, umaOka: $umaOka, basePoint: $basePoint, memo: $memo)';
+    return 'GameConfigModel(title: $title, playerNames: $playerNames, uma: $uma, oka: $oka, basePoint: $basePoint, memo: $memo)';
   }
 }
 
@@ -91,7 +99,8 @@ class GameConfigNotifier extends StateNotifier<GameConfigModel?> {
     state = GameConfigModel(
       title: '',
       playerNames: ['', '', '', ''],
-      umaOka: 10.0,
+      uma: 10.0,
+      oka: 10.0,
       basePoint: 25000,
       memo: null,
     );
@@ -129,9 +138,15 @@ class GameConfigNotifier extends StateNotifier<GameConfigModel?> {
     }
   }
 
-  void updateUmaOka(double umaOka) {
+  void updateUma(double uma) {
     if (state != null) {
-      state = state!.copyWith(umaOka: umaOka);
+      state = state!.copyWith(uma: uma);
+    }
+  }
+
+  void updateOka(double oka) {
+    if (state != null) {
+      state = state!.copyWith(oka: oka);
     }
   }
 

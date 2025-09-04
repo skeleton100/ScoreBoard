@@ -6,7 +6,8 @@ class Game {
   final int? id;
   final String title;
   final int basePoint;
-  final double umaOka;
+  final double uma;
+  final double oka;
   final String? memo;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -15,7 +16,8 @@ class Game {
     this.id,
     required this.title,
     required this.basePoint,
-    required this.umaOka,
+    required this.uma,
+    required this.oka,
     this.memo,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -36,7 +38,8 @@ class Game {
       id: id ?? this.id,
       title: title ?? this.title,
       basePoint: basePoint ?? this.basePoint,
-      umaOka: umaOka ?? this.umaOka,
+      uma: uma ?? this.uma,
+      oka: oka ?? this.oka,
       memo: memo ?? this.memo,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -48,7 +51,8 @@ class Game {
       'id': id,
       'title': title,
       'base_point': basePoint,
-      'uma_oka': umaOka,
+      'uma': uma,
+      'oka': oka,
       'memo': memo,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
@@ -60,7 +64,8 @@ class Game {
       id: map['id'] as int?,
       title: map['title'] as String,
       basePoint: map['base_point'] as int,
-      umaOka: map['uma_oka'] as double,
+      uma: (map['uma'] as double?) ?? 10.0, // デフォルト値を設定
+      oka: (map['oka'] as double?) ?? 20.0, // デフォルト値を設定
       memo: map['memo'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
@@ -69,7 +74,7 @@ class Game {
 
   @override
   String toString() {
-    return 'Game(id: $id, title: $title, basePoint: $basePoint, umaOka: $umaOka, memo: $memo)';
+    return 'Game(id: $id, title: $title, basePoint: $basePoint, uma: $uma, oka: $oka, memo: $memo)';
   }
 }
 

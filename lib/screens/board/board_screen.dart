@@ -5,6 +5,10 @@ import '../../utils/app_color.dart';
 import '../../models/game.dart';
 import '../../models/player.dart';
 import '../../routes/route_names.dart';
+import 'round_list_tab.dart';
+import 'summary_tab.dart';
+
+final _tabIndexProvider = StateProvider<int>((ref) => 0);
 
 class BoardScreen extends ConsumerWidget {
   const BoardScreen({super.key});
@@ -13,7 +17,9 @@ class BoardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentGame = ref.watch(currentGameProvider);
 
-    return Scaffold(
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
       appBar: AppBar(
         title: Text(currentGame?.title ?? 'Scoreboard'),
         backgroundColor: AppColors.boardAppBar,
@@ -21,6 +27,16 @@ class BoardScreen extends ConsumerWidget {
         leading: IconButton(
           onPressed: () => context.go(RouteNames.home),
           icon: const Icon(Icons.arrow_back),
+        ),
+        bottom: const TabBar(
+          labelStyle: TextStyle(color: AppColors.textLight, fontWeight: FontWeight.bold),
+          unselectedLabelStyle: TextStyle(color: AppColors.textLight),
+          indicatorColor: AppColors.textLight,
+          indicatorWeight: 3.0,
+          tabs: [
+            Tab(text: '各スコア'),
+            Tab(text: 'サマリ'),
+          ],
         ),
         actions: [
           IconButton(
@@ -31,32 +47,12 @@ class BoardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppColors.background, AppColors.surface],
-          ),
-        ),
-        child: currentGame == null
-            ? _buildNoGameSelected(context)
-            : FutureBuilder<List<Player>>(
-                future: ref.read(playersByGameProvider(currentGame.id!).future),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (snapshot.hasError) {
-                    return _buildErrorState(snapshot.error);
-                  }
-
-                  final players = snapshot.data ?? [];
-
-                  return _buildGameContent(context, currentGame, players);
-                },
-              ),
+      body: TabBarView(
+        children: [
+          RoundListTab(),
+          SummaryTab(),
+        ],
+      ),
       ),
     );
   }
@@ -169,7 +165,7 @@ class BoardScreen extends ConsumerWidget {
                       ),
                       Expanded(
                         child: Text(
-                          'ウマ: ${game.umaOka.toInt()}点',
+                          'ウマ: ${game.uma.toInt()}点', 
                           style: const TextStyle(
                             color: AppColors.textSecondary,
                           ),
@@ -239,9 +235,7 @@ class BoardScreen extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {
-                // TODO: スコア入力画面に遷移
-              },
+              onPressed: () => context.go(RouteNames.scoreInput),
               icon: const Icon(Icons.add),
               label: const Text('スコアを入力'),
               style: ElevatedButton.styleFrom(
