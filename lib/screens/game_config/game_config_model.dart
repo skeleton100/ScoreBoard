@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/umaoka.dart';
 
 class GameConfigModel {
   final String title;
@@ -178,3 +179,6 @@ class GameConfigNotifier extends StateNotifier<GameConfigModel?> {
 final gameConfigProvider = StateNotifierProvider<GameConfigNotifier, GameConfigModel?>((ref) {
   return GameConfigNotifier();
 }); 
+
+final umaProvider = StateProvider<Uma?>((ref) => Uma.uma5_10);
+final okaProvider = StateProvider<Oka?>((ref) => Oka.oka25);

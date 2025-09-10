@@ -6,6 +6,8 @@ import '../../models/game.dart';
 import '../../models/player.dart';
 import '../../routes/route_names.dart';
 import 'game_config_model.dart';
+import '../../models/umaoka.dart';
+import '../../widgets/common_dropdown.dart';
 
 class GameConfigScreen extends ConsumerStatefulWidget {
   const GameConfigScreen({super.key});
@@ -299,7 +301,7 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'ウマオカ設定',
+                        'ウマ設定',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -307,31 +309,10 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'ウマ: ${gameConfig.uma.toInt()}点',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Slider(
-                              value: gameConfig.uma,
-                              min: 5.0,
-                              max: 20.0,
-                              divisions: 15,
-                              activeColor: AppColors.secondary,
-                              onChanged: (value) {
-                                ref.read(gameConfigProvider.notifier).updateUma(value);
-                              },
-                            ),
-                          ),
-                        ],
+                      CommonDropdown(
+                        items: Uma.values,
+                        provider: umaProvider,
+                        labelBuilder: (uma) => uma.displayText,
                       ),
                     ],
                   ),
@@ -348,7 +329,7 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        '基準点',
+                        'オカ設定',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -356,21 +337,10 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      DropdownButtonFormField<int>(
-                        value: gameConfig.basePoint,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 25000, child: Text('25000点')),
-                          DropdownMenuItem(value: 30000, child: Text('30000点')),
-                          DropdownMenuItem(value: 35000, child: Text('35000点')),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            ref.read(gameConfigProvider.notifier).updateBasePoint(value);
-                          }
-                        },
+                      CommonDropdown(
+                        items: Oka.values,
+                        provider: okaProvider,
+                        labelBuilder: (oka) => oka.displayText,
                       ),
                     ],
                   ),
