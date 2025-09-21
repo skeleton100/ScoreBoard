@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database/database_helper.dart';
+import 'umaoka.dart';
 
 class Game {
   final int? id;
   final String title;
-  final int basePoint;
-  final double uma;
-  final double oka;
+  final Uma uma;
+  final Oka oka;
   final String? memo;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -15,21 +15,20 @@ class Game {
   Game({
     this.id,
     required this.title,
-    required this.basePoint,
     required this.uma,
     required this.oka,
     this.memo,
     DateTime? createdAt,
     DateTime? updatedAt,
-  }) : 
+  }) :
     createdAt = createdAt ?? DateTime.now(),
     updatedAt = updatedAt ?? DateTime.now();
 
   Game copyWith({
     int? id,
     String? title,
-    int? basePoint,
-    double? umaOka,
+    Uma? uma,
+    Oka? oka,
     String? memo,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -37,7 +36,6 @@ class Game {
     return Game(
       id: id ?? this.id,
       title: title ?? this.title,
-      basePoint: basePoint ?? this.basePoint,
       uma: uma ?? this.uma,
       oka: oka ?? this.oka,
       memo: memo ?? this.memo,
@@ -50,9 +48,8 @@ class Game {
     return {
       'id': id,
       'title': title,
-      'base_point': basePoint,
-      'uma': uma,
-      'oka': oka,
+      'uma': uma.name,
+      'oka': oka.name,
       'memo': memo,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
@@ -63,9 +60,14 @@ class Game {
     return Game(
       id: map['id'] as int?,
       title: map['title'] as String,
-      basePoint: map['base_point'] as int,
-      uma: (map['uma'] as double?) ?? 10.0, // デフォルト値を設定
-      oka: (map['oka'] as double?) ?? 20.0, // デフォルト値を設定
+      uma: Uma.values.firstWhere(
+        (e) => e.name == map['uma'],
+        orElse: () => Uma.uma5_10, // デフォルト値
+      ),
+      oka: Oka.values.firstWhere(
+        (e) => e.name == map['oka'],
+        orElse: () => Oka.oka25, // デフォルト値
+      ),
       memo: map['memo'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
@@ -74,7 +76,7 @@ class Game {
 
   @override
   String toString() {
-    return 'Game(id: $id, title: $title, basePoint: $basePoint, uma: $uma, oka: $oka, memo: $memo)';
+    return 'Game(id: $id, title: $title, uma: ${uma.displayText}, oka: ${oka.displayText}, memo: $memo)';
   }
 }
 

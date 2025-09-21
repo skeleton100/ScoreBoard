@@ -11,8 +11,8 @@ enum Uma{
   );
 
   final String displayText;
-  final double uma1;
-  final double uma2;
+  final int uma1;
+  final int uma2;
 }
 
 enum Oka{
@@ -27,5 +27,5 @@ enum Oka{
   );
 
   final String displayText;
-  final double oka;
+  final int oka;
 }

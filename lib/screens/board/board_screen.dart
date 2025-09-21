@@ -157,15 +157,7 @@ class BoardScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          '基準点: ${game.basePoint}点',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'ウマ: ${game.uma.toInt()}点', 
+                          'ウマ: ${game.uma.displayText}', 
                           style: const TextStyle(
                             color: AppColors.textSecondary,
                           ),

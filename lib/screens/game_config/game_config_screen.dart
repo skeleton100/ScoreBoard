@@ -70,7 +70,6 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
           // Gameモデルを作成
           final game = Game(
             title: gameConfig.title,
-            basePoint: gameConfig.basePoint,
             uma: gameConfig.uma,
             oka: gameConfig.oka,
             memo: gameConfig.memo,

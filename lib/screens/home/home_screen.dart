@@ -230,7 +230,7 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      '基準点: ${game.basePoint}点',
+                      'ウマ: ${game.uma.displayText}',
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                       ),
@@ -238,7 +238,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   Expanded(
                     child: Text(
-                      'ウマ: ${game.uma.toInt()}点 / オカ: ${game.oka.toInt()}点',
+                      'オカ: ${game.oka.displayText}',
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                       ),

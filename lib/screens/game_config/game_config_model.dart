@@ -4,8 +4,8 @@ import '../../models/umaoka.dart';
 class GameConfigModel {
   final String title;
   final List<String> playerNames;
-  final double uma;
-  final double oka;
+  final Uma uma;
+  final Oka oka;
   final int basePoint;
   final String? memo;
   final DateTime createdAt;
@@ -23,8 +23,8 @@ class GameConfigModel {
   GameConfigModel copyWith({
     String? title,
     List<String>? playerNames,
-    double? uma,
-    double? oka,
+    Uma? uma,
+    Oka? oka,
     int? basePoint,
     String? memo,
     DateTime? createdAt,
@@ -56,8 +56,8 @@ class GameConfigModel {
     return GameConfigModel(
       title: json['title'] as String,
       playerNames: List<String>.from(json['playerNames']),
-      uma: (json['uma'] as double?) ?? 10.0, // デフォルト値を設定
-      oka: (json['oka'] as double?) ?? 20.0, // デフォルト値を設定
+      uma: (json['uma'] as Uma?) ?? Uma.uma5_10, // デフォルト値を設定
+      oka: (json['oka'] as Oka?) ?? Oka.oka25, // デフォルト値を設定
       basePoint: json['basePoint'] as int,
       memo: json['memo'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -100,8 +100,8 @@ class GameConfigNotifier extends StateNotifier<GameConfigModel?> {
     state = GameConfigModel(
       title: '',
       playerNames: ['', '', '', ''],
-      uma: 10.0,
-      oka: 10.0,
+      uma: Uma.uma5_10,
+      oka: Oka.oka25,
       basePoint: 25000,
       memo: null,
     );
@@ -141,13 +141,13 @@ class GameConfigNotifier extends StateNotifier<GameConfigModel?> {
 
   void updateUma(double uma) {
     if (state != null) {
-      state = state!.copyWith(uma: uma);
+      state = state!.copyWith(uma: uma as Uma);
     }
   }
 
   void updateOka(double oka) {
     if (state != null) {
-      state = state!.copyWith(oka: oka);
+      state = state!.copyWith(oka: oka as Oka);
     }
   }
 
