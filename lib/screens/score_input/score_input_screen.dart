@@ -8,6 +8,8 @@ import '../../models/round.dart';
 import '../../providers/round_provider.dart';
 import 'score_input_model.dart';
 import '../../models/input_mode.dart';
+import '../../models/wind.dart';
+import '../../models/round_rule.dart';
 
 class ScoreInputScreen extends ConsumerStatefulWidget {
   const ScoreInputScreen({super.key});
@@ -89,7 +91,7 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
 
     try {
       // ラウンド名を生成
-      final roundName = ref.read(roundsProvider.notifier).generateRoundName(currentGame.id.toString());
+      final roundName = ref.read(roundsProvider.notifier).generateRoundName(currentGame.id.toString(), currentGame.roundRule);
       
       // ラウンドを作成
       final round = Round(
@@ -140,6 +142,7 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
     final isCalculated = ref.watch(isCalculatedProvider);
     final calculationResult = ref.watch(calculationResultProvider);
     final currentGame = ref.watch(currentGameProvider);
+    final inputSum = ref.watch(inputSumProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -182,12 +185,50 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
                         const SizedBox(height: 8),
                         Text('ウマ: ${currentGame.uma.displayText}'),
                         Text('オカ: ${currentGame.oka.displayText}'),
+                        Text('ルール: ${currentGame.roundRule.displayText}'),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
               ],
+
+              // ルール選択
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'ルール設定',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Column(
+                        children: RoundRule.values.map((rule) {
+                          return RadioListTile<RoundRule>(
+                            title: Text(rule.displayText),
+                            value: rule,
+                            groupValue: currentGame?.roundRule,
+                            onChanged: (value) {
+                              if (value != null && currentGame != null) {
+                                final updatedGame = currentGame.copyWith(roundRule: value);
+                                ref.read(currentGameProvider.notifier).state = updatedGame;
+                              }
+                            },
+                            contentPadding: EdgeInsets.zero,
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // 入力モード選択
               Card(
@@ -208,7 +249,7 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
                         children: [
                           Expanded(
                             child: RadioListTile<InputMode>(
-                              title: const Text('点棒'),
+                              title: Text(InputMode.tenbo.displayText),
                               value: InputMode.tenbo,
                               groupValue: inputMode,
                               onChanged: (value) {
@@ -221,7 +262,7 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
                           ),
                           Expanded(
                             child: RadioListTile<InputMode>(
-                              title: const Text('点数'),
+                              title: Text(InputMode.score.displayText),
                               value: InputMode.score,
                               groupValue: inputMode,
                               onChanged: (value) {
@@ -247,24 +288,41 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        inputMode == InputMode.tenbo ? '点棒入力' : '点数入力',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            inputMode == InputMode.tenbo ? '点棒入力' : '点数入力',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (inputSum != null)
+                            Text(
+                              inputMode == InputMode.tenbo
+                                ? '合計: $inputSum点'
+                                : '合計: ${inputSum >= 0 ? '+' : ''}$inputSum点',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: inputSum == (inputMode == InputMode.tenbo ? 100000 : 0)
+                                    ? AppColors.success
+                                    : AppColors.error,
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 16),
-                      ...List.generate(4, (index) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: ScoreTextField(
-                          label: 'プレイヤー${index + 1}',
-                          controller: _controllers[index],
+                      ...Wind.values.map((wind){
+                        return ScoreTextField(
+                          label: wind.displayText,
+                          controller: _controllers[wind.index],
                           isPointMode: inputMode == InputMode.tenbo,
                           validator: (value) => _validateInput(value, inputMode),
-                          onChanged: (value) => _onFieldChanged(value, index),
-                        ),
-                      )),
+                          onChanged: (value) => _onFieldChanged(value, wind.index),
+                        );
+                      }),
                     ],
                   ),
                 ),

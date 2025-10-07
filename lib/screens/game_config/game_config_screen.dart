@@ -72,6 +72,7 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
             title: gameConfig.title,
             uma: gameConfig.uma,
             oka: gameConfig.oka,
+            roundRule: gameConfig.roundRule,
             memo: gameConfig.memo,
           );
 

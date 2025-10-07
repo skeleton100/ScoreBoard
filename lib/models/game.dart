@@ -2,12 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database/database_helper.dart';
 import 'umaoka.dart';
+import 'round_rule.dart';
 
 class Game {
   final int? id;
   final String title;
   final Uma uma;
   final Oka oka;
+  final RoundRule roundRule;
   final String? memo;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -17,6 +19,7 @@ class Game {
     required this.title,
     required this.uma,
     required this.oka,
+    required this.roundRule,
     this.memo,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -29,6 +32,7 @@ class Game {
     String? title,
     Uma? uma,
     Oka? oka,
+    RoundRule? roundRule,
     String? memo,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -38,6 +42,7 @@ class Game {
       title: title ?? this.title,
       uma: uma ?? this.uma,
       oka: oka ?? this.oka,
+      roundRule: roundRule ?? this.roundRule,
       memo: memo ?? this.memo,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -50,6 +55,7 @@ class Game {
       'title': title,
       'uma': uma.name,
       'oka': oka.name,
+      'round_rule': roundRule.name,
       'memo': memo,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
@@ -68,6 +74,10 @@ class Game {
         (e) => e.name == map['oka'],
         orElse: () => Oka.oka25, // デフォルト値
       ),
+      roundRule: RoundRule.values.firstWhere(
+        (e) => e.name == map['round_rule'],
+        orElse: () => RoundRule.half, // デフォルト値
+      ),
       memo: map['memo'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
@@ -76,7 +86,7 @@ class Game {
 
   @override
   String toString() {
-    return 'Game(id: $id, title: $title, uma: ${uma.displayText}, oka: ${oka.displayText}, memo: $memo)';
+    return 'Game(id: $id, title: $title, uma: ${uma.displayText}, oka: ${oka.displayText}, roundRule: ${roundRule.displayText}, memo: $memo)';
   }
 }
 

@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/umaoka.dart';
+import '../../models/round_rule.dart';
 
 class GameConfigModel {
   final String title;
   final List<String> playerNames;
   final Uma uma;
   final Oka oka;
+  final RoundRule roundRule;
   final int basePoint;
   final String? memo;
   final DateTime createdAt;
@@ -15,6 +17,7 @@ class GameConfigModel {
     required this.playerNames,
     required this.uma,
     required this.oka,
+    required this.roundRule,
     required this.basePoint,
     this.memo,
     DateTime? createdAt,
@@ -25,6 +28,7 @@ class GameConfigModel {
     List<String>? playerNames,
     Uma? uma,
     Oka? oka,
+    RoundRule? roundRule,
     int? basePoint,
     String? memo,
     DateTime? createdAt,
@@ -34,6 +38,7 @@ class GameConfigModel {
       playerNames: playerNames ?? this.playerNames,
       uma: uma ?? this.uma,
       oka: oka ?? this.oka,
+      roundRule: roundRule ?? this.roundRule,
       basePoint: basePoint ?? this.basePoint,
       memo: memo ?? this.memo,
       createdAt: createdAt ?? this.createdAt,
@@ -46,6 +51,7 @@ class GameConfigModel {
       'playerNames': playerNames,
       'uma': uma,
       'oka': oka,
+      'roundRule': roundRule,
       'basePoint': basePoint,
       'memo': memo,
       'createdAt': createdAt.toIso8601String(),
@@ -58,6 +64,7 @@ class GameConfigModel {
       playerNames: List<String>.from(json['playerNames']),
       uma: (json['uma'] as Uma?) ?? Uma.uma5_10, // デフォルト値を設定
       oka: (json['oka'] as Oka?) ?? Oka.oka25, // デフォルト値を設定
+      roundRule: (json['roundRule'] as RoundRule?) ?? RoundRule.half, // デフォルト値を設定
       basePoint: json['basePoint'] as int,
       memo: json['memo'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -72,6 +79,7 @@ class GameConfigModel {
         other.playerNames.length == playerNames.length &&
         other.uma == uma &&
         other.oka == oka &&
+        other.roundRule == roundRule &&
         other.basePoint == basePoint &&
         other.memo == memo;
   }
@@ -82,13 +90,14 @@ class GameConfigModel {
         playerNames.hashCode ^
         uma.hashCode ^
         oka.hashCode ^
+        roundRule.hashCode ^
         basePoint.hashCode ^
         memo.hashCode;
   }
 
   @override
   String toString() {
-    return 'GameConfigModel(title: $title, playerNames: $playerNames, uma: $uma, oka: $oka, basePoint: $basePoint, memo: $memo)';
+    return 'GameConfigModel(title: $title, playerNames: $playerNames, uma: $uma, oka: $oka, roundRule: $roundRule, basePoint: $basePoint, memo: $memo)';
   }
 }
 
@@ -102,6 +111,7 @@ class GameConfigNotifier extends StateNotifier<GameConfigModel?> {
       playerNames: ['', '', '', ''],
       uma: Uma.uma5_10,
       oka: Oka.oka25,
+      roundRule: RoundRule.half,
       basePoint: 25000,
       memo: null,
     );
@@ -148,6 +158,12 @@ class GameConfigNotifier extends StateNotifier<GameConfigModel?> {
   void updateOka(double oka) {
     if (state != null) {
       state = state!.copyWith(oka: oka as Oka);
+    }
+  }
+
+  void updateRoundRule(RoundRule roundRule) {
+    if (state != null) {
+      state = state!.copyWith(roundRule: roundRule);
     }
   }
 

@@ -3,6 +3,8 @@ import '../../models/game.dart';
 import '../../services/point_calc_service.dart';
 import '../../models/umaoka.dart';
 import '../../models/input_mode.dart';
+import '../../models/same_point_mode.dart';
+import '../../utils/app_constants.dart';
 
 // スコア入力の状態を管理するクラス
 class ScoreInputState {
@@ -158,7 +160,7 @@ class ScoreInputNotifier extends StateNotifier<ScoreInputState> {
       // 点棒モード: 合計が100,000点になるかチェック
       final actualPoints = values.map((v) => v * 100).toList();
       final totalPoints = actualPoints.reduce((a, b) => a + b);
-      if (totalPoints != 100000) {
+      if (totalPoints != AppConstants.tenboSum) {
         return ValidationResult.invalid('点棒の合計が100,000点になりません。\\n現在の合計: ${totalPoints}点');
       }
     } else {
@@ -191,14 +193,14 @@ class ScoreInputNotifier extends StateNotifier<ScoreInputState> {
   // 点棒モードの計算（ウマ・オカを含む）
   CalculationResult _calculateFromPoints(List<int> values, Game? currentGame) {
     try {
-      final actualPoints = values.map((v) => v * 100).toList();
 
       // PointCalcServiceを使用してウマオカ計算を実行
       final pointCalcService = PointCalcService();
-      final uma = Uma.uma10_20; // デフォルトで10-20を使用
+      final uma = Uma.uma5_10; // デフォルトで5-10を使用
       final oka = Oka.oka25;    // デフォルトで25000点持ちを使用
+      final samePointMode = SamePointMode.kamicha; // デフォルトで上家取りを使用
 
-      final result = pointCalcService.calculateTenbo(actualPoints, uma, oka);
+      final result = pointCalcService.calculateTenbo(values, uma, oka, samePointMode);
       return CalculationResult.success(result);
 
     } catch (e) {
@@ -241,29 +243,61 @@ class ScoreInputNotifier extends StateNotifier<ScoreInputState> {
   }
 }
 
-// Riverpod プロバイダー
-final scoreInputProvider = StateNotifierProvider<ScoreInputNotifier, ScoreInputState>((ref) {
+// Riverpod プロバイダー（autoDispose: 画面破棄時に自動的に状態をリセット）
+final scoreInputProvider = StateNotifierProvider.autoDispose<ScoreInputNotifier, ScoreInputState>((ref) {
   return ScoreInputNotifier();
 });
 
 // 個別の状態にアクセスするためのプロバイダー（UI用）
-final inputModeProvider = Provider<InputMode>((ref) {
+final inputModeProvider = Provider.autoDispose<InputMode>((ref) {
   return ref.watch(scoreInputProvider).inputMode;
 });
 
-final isCalculatedProvider = Provider<bool>((ref) {
+final isCalculatedProvider = Provider.autoDispose<bool>((ref) {
   return ref.watch(scoreInputProvider).isCalculated;
 });
 
-final calculationResultProvider = Provider<List<int>?>((ref) {
+final calculationResultProvider = Provider.autoDispose<List<int>?>((ref) {
   return ref.watch(scoreInputProvider).calculationResult;
 });
 
-final errorMessageProvider = Provider<String?>((ref) {
+final errorMessageProvider = Provider.autoDispose<String?>((ref) {
   return ref.watch(scoreInputProvider).errorMessage;
 });
 
 // 特定のプレイヤーの入力値を取得するプロバイダー
-final playerInputProvider = Provider.family<String, int>((ref, playerIndex) {
+final playerInputProvider = Provider.autoDispose.family<String, int>((ref, playerIndex) {
   return ref.watch(scoreInputProvider).inputValues[playerIndex];
+});
+
+// 入力値の合計を計算するプロバイダー
+// 1つでも入力があれば合計を表示
+final inputSumProvider = Provider.autoDispose<int?>((ref) {
+  final state = ref.watch(scoreInputProvider);
+  final inputValues = state.inputValues;
+
+  // 入力された値のみを解析
+  final parsedValues = <int>[];
+  for (final value in inputValues) {
+    if (value.isEmpty) continue;
+
+    final parsed = int.tryParse(value);
+    if (parsed == null) {
+      return null;
+    }
+    parsedValues.add(parsed);
+  }
+
+  // 何も入力されていない場合はnullを返す
+  if (parsedValues.isEmpty) {
+    return null;
+  }
+
+  // 点棒モードの場合は100倍して合計
+  if (state.inputMode == InputMode.tenbo) {
+    return parsedValues.map((v) => v * 100).reduce((a, b) => a + b);
+  } else {
+    // 点数モードの場合はそのまま合計
+    return parsedValues.reduce((a, b) => a + b);
+  }
 });
