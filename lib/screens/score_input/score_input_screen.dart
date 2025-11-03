@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../widgets/score_text_field.dart';
 import '../../utils/app_color.dart';
 import '../../models/game.dart';
 import '../../models/round.dart';
@@ -10,6 +9,7 @@ import 'score_input_model.dart';
 import '../../models/input_mode.dart';
 import '../../models/wind.dart';
 import '../../models/round_rule.dart';
+import '../../models/player.dart';
 
 class ScoreInputScreen extends ConsumerStatefulWidget {
   const ScoreInputScreen({super.key});
@@ -24,12 +24,37 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
     (index) => TextEditingController(),
   );
 
+  final List<FocusNode> _focusNodes = List.generate(
+    4,
+    (index) => FocusNode(),
+  );
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isAutoFilling = false; // 自動入力中フラグ
+
+  @override
+  void initState() {
+    super.initState();
+    // フォーカスノードにリスナーを追加
+    for (int i = 0; i < _focusNodes.length; i++) {
+      _focusNodes[i].addListener(() {
+        // フォーカスが外れた時に自動入力をチェック
+        if (!_focusNodes[i].hasFocus && !_isAutoFilling) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _tryAutoFill();
+          });
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
     for (var controller in _controllers) {
       controller.dispose();
+    }
+    for (var focusNode in _focusNodes) {
+      focusNode.dispose();
     }
     super.dispose();
   }
@@ -44,6 +69,81 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
 
   void _onFieldChanged(String value, int playerIndex) {
     ref.read(scoreInputProvider.notifier).updatePlayerInput(playerIndex, value);
+  }
+
+  void _tryAutoFill() {
+    if (_isAutoFilling) return; // 既に自動入力中の場合は何もしない
+
+    final inputMode = ref.read(inputModeProvider);
+    final inputValues = ref.read(scoreInputProvider).inputValues;
+
+    print('=== _tryAutoFill called ===');
+    print('inputValues: $inputValues');
+
+    // 空のフィールドを探す
+    int? emptyIndex;
+    int filledCount = 0;
+
+    for (int i = 0; i < inputValues.length; i++) {
+      if (inputValues[i].isEmpty) {
+        if (emptyIndex != null) {
+          // 空のフィールドが2つ以上ある場合は自動入力しない
+          print('複数の空フィールドがあるため自動入力しない');
+          return;
+        }
+        emptyIndex = i;
+      } else {
+        filledCount++;
+      }
+    }
+
+    print('emptyIndex: $emptyIndex, filledCount: $filledCount');
+
+    // 正確に3つのフィールドが埋まっており、1つだけ空の場合
+    if (emptyIndex != null && filledCount == 3) {
+      // 入力された3つの値を取得
+      final values = <int>[];
+      for (int i = 0; i < inputValues.length; i++) {
+        if (i == emptyIndex) continue;
+
+        final parsed = int.tryParse(inputValues[i]);
+        if (parsed == null) {
+          print('パースエラー: inputValues[$i] = ${inputValues[i]}');
+          return; // パースエラーがある場合は自動入力しない
+        }
+        values.add(parsed);
+      }
+
+      print('parsed values: $values');
+
+      if (values.length != 3) {
+        print('values.length != 3');
+        return;
+      }
+
+      // 目標値を計算
+      final int targetSum = inputMode == InputMode.tenbo ? 1000 : 0;
+
+      // 現在の合計を計算
+      final currentSum = values.reduce((a, b) => a + b);
+
+      // 差分を計算
+      final autoValue = targetSum - currentSum;
+
+      print('targetSum: $targetSum, currentSum: $currentSum, autoValue: $autoValue');
+
+      // 自動入力フラグを立てる
+      _isAutoFilling = true;
+
+      // Controllerとstateを更新
+      _controllers[emptyIndex].text = autoValue.toString();
+      ref.read(scoreInputProvider.notifier).updatePlayerInput(emptyIndex, autoValue.toString());
+
+      print('自動入力完了: index=$emptyIndex, value=$autoValue');
+
+      // 自動入力フラグを下ろす
+      _isAutoFilling = false;
+    }
   }
 
   String? _validateInput(String? value, InputMode mode) {
@@ -143,6 +243,8 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
     final calculationResult = ref.watch(calculationResultProvider);
     final currentGame = ref.watch(currentGameProvider);
     final inputSum = ref.watch(inputSumProvider);
+    final playersAsync = ref.watch(currentGamePlayersProvider);
+    final playerAssignments = ref.watch(playerAssignmentsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -314,15 +416,146 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      ...Wind.values.map((wind){
-                        return ScoreTextField(
-                          label: wind.displayText,
-                          controller: _controllers[wind.index],
-                          isPointMode: inputMode == InputMode.tenbo,
-                          validator: (value) => _validateInput(value, inputMode),
-                          onChanged: (value) => _onFieldChanged(value, wind.index),
-                        );
-                      }),
+                      playersAsync.when(
+                        data: (players) {
+                          return Column(
+                            children: Wind.values.map((wind) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 20.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // 風のラベル
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 8.0),
+                                      child: Text(
+                                        wind.displayText,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    // プレイヤー選択と点数入力を横並び
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // プレイヤー選択ドロップダウン
+                                        Expanded(
+                                          flex: 2,
+                                          child: DropdownButtonFormField<int>(
+                                            value: playerAssignments[wind],
+                                            decoration: const InputDecoration(
+                                              border: OutlineInputBorder(),
+                                              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                            ),
+                                            items: players.asMap().entries.map((entry) {
+                                              return DropdownMenuItem<int>(
+                                                value: entry.key,
+                                                child: Text(entry.value.name),
+                                              );
+                                            }).toList(),
+                                            onChanged: (value) {
+                                              ref.read(scoreInputProvider.notifier).assignPlayer(wind, value);
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        // 点数入力フィールド（点棒モード時は00点を表示）
+                                        Expanded(
+                                          flex: 2,
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: TextFormField(
+                                                  controller: _controllers[wind.index],
+                                                  focusNode: _focusNodes[wind.index],
+                                                  keyboardType: TextInputType.number,
+                                                  decoration: InputDecoration(
+                                                    labelText: inputMode == InputMode.tenbo ? '点棒' : '点数',
+                                                    border: const OutlineInputBorder(),
+                                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                                  ),
+                                                  validator: (value) => _validateInput(value, inputMode),
+                                                  onChanged: (value) => _onFieldChanged(value, wind.index),
+                                                ),
+                                              ),
+                                              if (inputMode == InputMode.tenbo)
+                                                Padding(
+                                                  padding: const EdgeInsets.only(left: 4.0),
+                                                  child: Text(
+                                                    '00点',
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      color: Colors.grey[600],
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        },
+                        loading: () => const Center(child: CircularProgressIndicator()),
+                        error: (error, stack) => Column(
+                          children: Wind.values.map((wind) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                    child: Text(
+                                      wind.displayText,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextFormField(
+                                          controller: _controllers[wind.index],
+                                          focusNode: _focusNodes[wind.index],
+                                          keyboardType: TextInputType.number,
+                                          decoration: InputDecoration(
+                                            labelText: inputMode == InputMode.tenbo ? '点棒' : '点数',
+                                            border: const OutlineInputBorder(),
+                                          ),
+                                          validator: (value) => _validateInput(value, inputMode),
+                                          onChanged: (value) => _onFieldChanged(value, wind.index),
+                                        ),
+                                      ),
+                                      if (inputMode == InputMode.tenbo)
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 4.0),
+                                          child: Text(
+                                            '00点',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.grey[600],
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ],
                   ),
                 ),

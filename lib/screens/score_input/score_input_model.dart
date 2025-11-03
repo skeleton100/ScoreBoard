@@ -4,7 +4,7 @@ import '../../services/point_calc_service.dart';
 import '../../models/umaoka.dart';
 import '../../models/input_mode.dart';
 import '../../models/same_point_mode.dart';
-import '../../utils/app_constants.dart';
+import '../../models/wind.dart';
 
 // スコア入力の状態を管理するクラス
 class ScoreInputState {
@@ -13,6 +13,7 @@ class ScoreInputState {
   final bool isCalculated;
   final List<int>? calculationResult;
   final String? errorMessage;
+  final Map<Wind, int?> playerAssignments; // 風→プレイヤーインデックスのマッピング
 
   const ScoreInputState({
     required this.inputMode,
@@ -20,6 +21,7 @@ class ScoreInputState {
     required this.isCalculated,
     this.calculationResult,
     this.errorMessage,
+    required this.playerAssignments,
   });
 
   ScoreInputState copyWith({
@@ -28,6 +30,7 @@ class ScoreInputState {
     bool? isCalculated,
     List<int>? calculationResult,
     String? errorMessage,
+    Map<Wind, int?>? playerAssignments,
   }) {
     return ScoreInputState(
       inputMode: inputMode ?? this.inputMode,
@@ -35,6 +38,7 @@ class ScoreInputState {
       isCalculated: isCalculated ?? this.isCalculated,
       calculationResult: calculationResult ?? this.calculationResult,
       errorMessage: errorMessage,
+      playerAssignments: playerAssignments ?? this.playerAssignments,
     );
   }
 }
@@ -79,10 +83,16 @@ class CalculationResult {
 
 // スコア入力のビジネスロジックを管理するクラス
 class ScoreInputNotifier extends StateNotifier<ScoreInputState> {
-  ScoreInputNotifier() : super(const ScoreInputState(
+  ScoreInputNotifier() : super(ScoreInputState(
     inputMode: InputMode.tenbo,
-    inputValues: ['', '', '', ''],
+    inputValues: const ['', '', '', ''],
     isCalculated: false,
+    playerAssignments: {
+      Wind.east: 0,
+      Wind.south: 1,
+      Wind.west: 2,
+      Wind.north: 3,
+    },
   ));
 
   // 入力モードを変更
@@ -90,6 +100,19 @@ class ScoreInputNotifier extends StateNotifier<ScoreInputState> {
     state = state.copyWith(
       inputMode: newMode,
       inputValues: ['', '', '', ''],
+      isCalculated: false,
+      calculationResult: null,
+      errorMessage: null,
+    );
+  }
+
+  // プレイヤー割り当てを変更
+  void assignPlayer(Wind wind, int? playerIndex) {
+    final newAssignments = Map<Wind, int?>.from(state.playerAssignments);
+    newAssignments[wind] = playerIndex;
+
+    state = state.copyWith(
+      playerAssignments: newAssignments,
       isCalculated: false,
       calculationResult: null,
       errorMessage: null,
@@ -124,28 +147,40 @@ class ScoreInputNotifier extends StateNotifier<ScoreInputState> {
     if (value == null || value.isEmpty) {
       return ValidationResult.invalid('値を入力してください');
     }
-    
+
+    final intValue = int.tryParse(value);
+    if (intValue == null) {
+      return ValidationResult.invalid('数字を入力してください');
+    }
+
     if (mode == InputMode.tenbo) {
-      final intValue = int.tryParse(value);
-      if (intValue == null) {
-        return ValidationResult.invalid('数字を入力してください');
-      }
-      if (intValue < 0 || intValue > 999) {
-        return ValidationResult.invalid('0-999の範囲で入力してください');
-      }
-    } else {
-      final intValue = int.tryParse(value);
-      if (intValue == null) {
-        return ValidationResult.invalid('数字を入力してください（負数可）');
+      // 点棒モード: ハコテンを考慮して負の値も許可
+      // 上限は999（99900点）、下限は制限なし
+      if (intValue > 999) {
+        return ValidationResult.invalid('999以下の値を入力してください');
       }
     }
+
     return ValidationResult.valid;
   }
 
   // 全ての入力値のバリデーション
   ValidationResult validateAllInputs() {
     final inputValues = state.inputValues;
-    
+    final playerAssignments = state.playerAssignments;
+
+    // プレイヤー割り当ての重複チェック
+    final assignedPlayerIndices = playerAssignments.values.whereType<int>().toList();
+    final uniqueIndices = assignedPlayerIndices.toSet();
+    if (assignedPlayerIndices.length != uniqueIndices.length) {
+      return ValidationResult.invalid('同じプレイヤーが複数の風に割り当てられています');
+    }
+
+    // 全てのプレイヤーが割り当てられているかチェック
+    if (playerAssignments.values.any((index) => index == null)) {
+      return ValidationResult.invalid('全ての風にプレイヤーを割り当ててください');
+    }
+
     // 空の値がないかチェック
     for (int i = 0; i < inputValues.length; i++) {
       final validation = validateSingleInput(inputValues[i], state.inputMode);
@@ -157,17 +192,22 @@ class ScoreInputNotifier extends StateNotifier<ScoreInputState> {
     final values = inputValues.map((v) => int.parse(v)).toList();
 
     if (state.inputMode == InputMode.tenbo) {
-      // 点棒モード: 合計が100,000点になるかチェック
-      final actualPoints = values.map((v) => v * 100).toList();
-      final totalPoints = actualPoints.reduce((a, b) => a + b);
-      if (totalPoints != AppConstants.tenboSum) {
-        return ValidationResult.invalid('点棒の合計が100,000点になりません。\\n現在の合計: ${totalPoints}点');
+      // 点棒モード: 合計が100,000点（=1000）になるかチェック
+      final total = values.reduce((a, b) => a + b);
+      const expectedTotal = 1000; // 100,000点 ÷ 100
+
+      // 負の値がある場合（ハコテン）はチェックをスキップ
+      final hasNegative = values.any((v) => v < 0);
+
+      if (!hasNegative && total != expectedTotal) {
+        final actualPoints = total * 100;
+        return ValidationResult.invalid('点棒の合計が100,000点になりません。\n現在の合計: $actualPoints点');
       }
     } else {
       // 点数モード: 合計が0になるかチェック
       final totalScore = values.reduce((a, b) => a + b);
       if (totalScore != 0) {
-        return ValidationResult.invalid('点数の合計が0になりません。\\n現在の合計: ${totalScore}点');
+        return ValidationResult.invalid('点数の合計が0になりません。\n現在の合計: $totalScore点');
       }
     }
 
@@ -263,6 +303,11 @@ final calculationResultProvider = Provider.autoDispose<List<int>?>((ref) {
 
 final errorMessageProvider = Provider.autoDispose<String?>((ref) {
   return ref.watch(scoreInputProvider).errorMessage;
+});
+
+// プレイヤー割り当て（風→プレイヤーインデックス）を取得するプロバイダー
+final playerAssignmentsProvider = Provider.autoDispose<Map<Wind, int?>>((ref) {
+  return ref.watch(scoreInputProvider).playerAssignments;
 });
 
 // 特定のプレイヤーの入力値を取得するプロバイダー
