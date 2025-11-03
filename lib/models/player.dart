@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database/database_helper.dart';
+import 'game.dart';
 
 class Player {
   final int? id;
@@ -151,4 +152,14 @@ final playerRepositoryProvider = Provider<PlayerRepository>((ref) {
 final playersByGameProvider = FutureProvider.family<List<Player>, int>((ref, gameId) async {
   final repository = ref.read(playerRepositoryProvider);
   return await repository.getPlayersByGameId(gameId);
-}); 
+});
+
+// 現在のゲームのプレイヤーを取得するprovider
+final currentGamePlayersProvider = FutureProvider<List<Player>>((ref) async {
+  final currentGame = ref.watch(currentGameProvider);
+  if (currentGame?.id == null) {
+    return [];
+  }
+  final repository = ref.read(playerRepositoryProvider);
+  return await repository.getPlayersByGameId(currentGame!.id!);
+});

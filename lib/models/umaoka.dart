@@ -6,13 +6,13 @@ enum Uma{
 
   const Uma(
     this.displayText,
-    this.uma1,
-    this.uma2,
+    this.lowerUma,
+    this.upperUma,
   );
 
   final String displayText;
-  final int uma1;
-  final int uma2;
+  final int lowerUma;
+  final int upperUma;
 }
 
 enum Oka{

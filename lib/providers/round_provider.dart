@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/round.dart';
 import '../models/game.dart';
+import '../models/round_rule.dart';
 
 // ラウンドリストの状態管理
 final roundsProvider = StateNotifierProvider<RoundNotifier, List<Round>>((ref) {
@@ -48,18 +49,38 @@ class RoundNotifier extends StateNotifier<List<Round>> {
     }
   }
 
-  // ラウンド番号を自動生成
-  String generateRoundName(String gameId) {
+  // ラウンド番号を自動生成（RoundRuleに応じて）
+  String generateRoundName(String gameId, RoundRule roundRule) {
     final gameRounds = state.where((round) => round.gameId == gameId).toList();
     final roundCount = gameRounds.length + 1;
-    
-    // 簡単なラウンド名生成ロジック（東風戦想定）
-    if (roundCount <= 4) {
-      return '東${roundCount}局';
-    } else if (roundCount <= 8) {
-      return '南${roundCount - 4}局';
-    } else {
-      return '第${roundCount}局';
+
+    switch (roundRule) {
+      case RoundRule.quarter: // 東風戦
+        if (roundCount <= 4) {
+          return '${roundRule.displayText}$roundCount';
+        } else {
+          return '${roundRule.displayText}$roundCount'; // 延長戦も東風として継続
+        }
+      case RoundRule.half: // 半荘戦
+        if (roundCount <= 4) {
+          return '${roundRule.displayText}$roundCount';
+        } else if (roundCount <= 8) {
+          return '${roundRule.displayText}$roundCount';
+        } else {
+          return '${roundRule.displayText}$roundCount'; // 延長戦
+        }
+      case RoundRule.full: // 一荘戦
+        if (roundCount <= 4) {
+          return '東$roundCount局';
+        } else if (roundCount <= 8) {
+          return '南${roundCount - 4}局';
+        } else if (roundCount <= 12) {
+          return '西${roundCount - 8}局';
+        } else if (roundCount <= 16) {
+          return '北${roundCount - 12}局';
+        } else {
+          return '${roundRule.displayText}$roundCount'; // 延長戦
+        }
     }
   }
 }
