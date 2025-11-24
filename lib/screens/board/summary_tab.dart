@@ -37,9 +37,14 @@ final playerSummariesProvider = Provider.autoDispose<List<PlayerSummary>>((ref) 
       final totalScores = List<int>.filled(players.length, 0);
 
       for (final round in rounds) {
-        for (int i = 0; i < round.scores.length && i < totalScores.length; i++) {
-          totalScores[i] += round.scores[i];
-        }
+        // プレイヤー割り当て情報を使ってスコアを集計
+        // round.playerAssignments: { windIndex: playerIndex }
+        // round.scores: 各風のスコア（東南西北の順）
+        round.playerAssignments.forEach((windIndex, playerIndex) {
+          if (windIndex < round.scores.length && playerIndex < totalScores.length) {
+            totalScores[playerIndex] += round.scores[windIndex];
+          }
+        });
       }
 
       // PlayerSummaryリストを作成

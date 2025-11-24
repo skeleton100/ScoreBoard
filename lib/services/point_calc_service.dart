@@ -6,8 +6,13 @@ import '../../models/same_point_mode.dart';
 
 class PointCalcService {
 
-  
+
   List<int> calculateTenbo(List<int> values, Uma uma, Oka oka, SamePointMode mode) {
+    // 4人以外の場合は単純に素点を計算（ウマ・オカなし）
+    if (values.length != 4) {
+      return values.map((value) => (_roundOff(value) - AppConstants.basePoint) ~/ 10).toList();
+    }
+
     if (values.length == 4) {
       // 正しい麻雀計算: (点棒 - 30000) / 1000
       final scores = values.map((value) => (_roundOff(value) - AppConstants.basePoint) ~/ 10).toList();
@@ -62,9 +67,9 @@ class PointCalcService {
         }
       }
     }
-    else {
-      throw Exception('Values length must be 4');
-    }
+
+    // この行には到達しないはず
+    throw Exception('Unexpected error in calculateTenbo');
   }
 
   // 点棒の上位3桁を受け取って五捨六入処理

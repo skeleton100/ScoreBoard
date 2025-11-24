@@ -192,14 +192,26 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
     try {
       // ラウンド名を生成
       final roundName = ref.read(roundsProvider.notifier).generateRoundName(currentGame.id.toString(), currentGame.roundRule);
-      
+
+      // プレイヤー割り当てを取得（Wind → プレイヤーindex）
+      final playerAssignments = ref.read(playerAssignmentsProvider);
+
+      // Wind → プレイヤーindex のマップを windIndex → playerIndex に変換
+      final assignmentsMap = <int, int>{};
+      playerAssignments.forEach((wind, playerIndex) {
+        if (playerIndex != null) {
+          assignmentsMap[wind.index] = playerIndex;
+        }
+      });
+
       // ラウンドを作成
       final round = Round(
         gameId: currentGame.id.toString(),
         roundName: roundName,
         scores: calculationResult,
+        playerAssignments: assignmentsMap,
       );
-      
+
       // ラウンドを保存
       ref.read(roundsProvider.notifier).addRound(round);
       
@@ -585,13 +597,13 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('プレイヤー${index + 1}:'),
+                              Text('${Wind.values[index].displayText}:'),
                               Text(
                                 '${calculationResult[index] >= 0 ? '+' : ''}${calculationResult[index]}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: calculationResult[index] >= 0 
-                                      ? AppColors.success 
+                                  color: calculationResult[index] >= 0
+                                      ? AppColors.success
                                       : AppColors.error,
                                 ),
                               ),
