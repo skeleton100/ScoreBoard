@@ -4,7 +4,7 @@ import 'table_definitions.dart';
 
 class DatabaseHelper {
   static const String _databaseName = 'mahjong_scoreboard.db';
-  static const int _databaseVersion = 2;
+  static const int _databaseVersion = 3;
   
   static Database? _database;
 
@@ -42,27 +42,25 @@ class DatabaseHelper {
 
   // データベースアップグレード時の処理
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // uma_okaを分割してumaとokaに変更
-      await db.execute('ALTER TABLE games ADD COLUMN uma REAL NOT NULL DEFAULT 10.0');
-      await db.execute('ALTER TABLE games ADD COLUMN oka REAL NOT NULL DEFAULT 20.0');
-      
-      // 既存のuma_okaの値をumaとokaにコピー
-      await db.execute('''
-        UPDATE games 
-        SET uma = uma_oka, oka = uma_oka 
-        WHERE uma_oka IS NOT NULL
-      ''');
-      
-      // 古いカラムを削除（SQLiteでは直接削除できないため、テーブルを再作成）
+    if (oldVersion < 3) {
+      // スキーマ変更: base_point, uma(REAL), oka(REAL) → uma(TEXT), oka(TEXT), round_rule(TEXT)
+      // テーブルを再作成
       await db.execute('CREATE TEMPORARY TABLE games_backup AS SELECT * FROM games');
       await db.execute('DROP TABLE games');
       await db.execute(TableDefinitions.createGameTable);
-      await db.execute('''
-        INSERT INTO games (id, title, base_point, uma, oka, memo, created_at, updated_at)
-        SELECT id, title, base_point, uma, oka, memo, created_at, updated_at 
-        FROM games_backup
-      ''');
+
+      // 既存データがある場合は移行（デフォルト値を設定）
+      final hasData = await db.rawQuery('SELECT COUNT(*) as count FROM games_backup');
+      final count = Sqflite.firstIntValue(hasData) ?? 0;
+
+      if (count > 0) {
+        await db.execute('''
+          INSERT INTO games (id, title, uma, oka, round_rule, memo, created_at, updated_at)
+          SELECT id, title, 'uma5_10', 'oka25', 'half', memo, created_at, updated_at
+          FROM games_backup
+        ''');
+      }
+
       await db.execute('DROP TABLE games_backup');
     }
   }

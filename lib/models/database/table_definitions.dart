@@ -4,9 +4,9 @@ class TableDefinitions {
     CREATE TABLE games (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      base_point INTEGER NOT NULL DEFAULT 25000,
-      uma REAL NOT NULL DEFAULT 10.0,
-      oka REAL NOT NULL DEFAULT 20.0,
+      uma TEXT NOT NULL,
+      oka TEXT NOT NULL,
+      round_rule TEXT NOT NULL,
       memo TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
