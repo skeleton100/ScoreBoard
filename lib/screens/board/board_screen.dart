@@ -38,14 +38,14 @@ class BoardScreen extends ConsumerWidget {
             Tab(text: 'サマリ'),
           ],
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              // TODO: 設定画面に遷移
-            },
-            icon: const Icon(Icons.settings),
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     onPressed: () {
+        //       // TODO: 設定画面に遷移
+        //     },
+        //     icon: const Icon(Icons.settings),
+        //   ),
+        // ],
       ),
       body: TabBarView(
         children: [
