@@ -18,12 +18,12 @@ class HomeScreen extends ConsumerWidget {
         title: const Text('Scoreboard App'),
         backgroundColor: AppColors.homeAppBar,
         foregroundColor: AppColors.textLight,
-        actions: [
-          IconButton(
-            onPressed: () => context.go(RouteNames.settings),
-            icon: const Icon(Icons.settings),
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     onPressed: () => context.go(RouteNames.settings),
+        //     icon: const Icon(Icons.settings),
+        //   ),
+        // ],
       ),
       body: Container(
         decoration: const BoxDecoration(
