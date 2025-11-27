@@ -156,24 +156,24 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
           onPressed: () => context.go(RouteNames.home),
           icon: const Icon(Icons.arrow_back),
         ),
-        actions: [
-          TextButton(
-            onPressed: _isCreating ? null : _createGameConfig,
-            child: _isCreating
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.textLight),
-                    ),
-                  )
-                : const Text(
-                    '作成',
-                    style: TextStyle(color: AppColors.textLight, fontSize: 16),
-                  ),
-          ),
-        ],
+        // actions: [
+        //   TextButton(
+        //     onPressed: _isCreating ? null : _createGameConfig,
+        //     child: _isCreating
+        //         ? const SizedBox(
+        //             width: 20,
+        //             height: 20,
+        //             child: CircularProgressIndicator(
+        //               strokeWidth: 2,
+        //               valueColor: AlwaysStoppedAnimation<Color>(AppColors.textLight),
+        //             ),
+        //           )
+        //         : const Text(
+        //             '作成',
+        //             style: TextStyle(color: AppColors.textLight, fontSize: 16),
+        //           ),
+        //   ),
+        // ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -401,6 +401,10 @@ class _GameConfigScreenState extends ConsumerState<GameConfigScreen> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: (_isCreating ? null : () => _createGameConfig()),
+        child: const Icon(Icons.save),
       ),
     );
   }
