@@ -69,6 +69,10 @@ class HomeScreen extends ConsumerWidget {
               : _buildGameList(context, ref, games),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.go(RouteNames.gameConfig),
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
@@ -136,14 +140,14 @@ class HomeScreen extends ConsumerWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              TextButton.icon(
-                onPressed: () => context.go(RouteNames.gameConfig),
-                icon: const Icon(Icons.add),
-                label: const Text('新規作成'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                ),
-              ),
+              // TextButton.icon(
+              //   onPressed: () => context.go(RouteNames.gameConfig),
+              //   icon: const Icon(Icons.add),
+              //   label: const Text('新規作成'),
+              //   style: TextButton.styleFrom(
+              //     foregroundColor: AppColors.primary,
+              //   ),
+              // ),
             ],
           ),
           const SizedBox(height: 16),
